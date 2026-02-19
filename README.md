@@ -211,9 +211,6 @@ Learn more: [Drips Wave for Contributors](https://docs.drips.network/wave/contri
 - Monetize surplus solar generation
 - Energy independence from utilities
 
-**Market Opportunity:**  
-Spain allocated **€35.6M in 2025** for 27 cooperative communities via CE-Implementa grants (60% subsidies for solar installations).
-
 ---
 
 ## Roadmap
