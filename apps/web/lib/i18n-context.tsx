@@ -63,6 +63,12 @@ const translations = {
     "marketplace.buyModal.unitPrice": "Precio unitario:",
     "marketplace.buyModal.totalPay": "Total a pagar",
     "marketplace.buyModal.confirm": "Confirmar Compra",
+    "marketplace.communityStats": "Estadísticas de la Comunidad",
+    "marketplace.totalGenerated": "Total Generado",
+    "marketplace.activeMembers": "Miembros Activos",
+    "marketplace.contractData": "Datos en vivo de Stellar Testnet",
+    "marketplace.loadingContract": "Cargando datos del contrato...",
+    "marketplace.errorContract": "No se pudieron cargar los datos del contrato",
 
     // Wallet Confirmation Modal
     "wallet.title": "Conectar Wallet",
@@ -196,6 +202,12 @@ const translations = {
     "marketplace.buyModal.unitPrice": "Unit price:",
     "marketplace.buyModal.totalPay": "Total to pay",
     "marketplace.buyModal.confirm": "Confirm Purchase",
+    "marketplace.communityStats": "Community Stats",
+    "marketplace.totalGenerated": "Total Generated",
+    "marketplace.activeMembers": "Active Members",
+    "marketplace.contractData": "Live data from Stellar Testnet",
+    "marketplace.loadingContract": "Loading contract data...",
+    "marketplace.errorContract": "Could not load contract data",
 
     // Wallet Confirmation Modal
     "wallet.title": "Connect Wallet",
