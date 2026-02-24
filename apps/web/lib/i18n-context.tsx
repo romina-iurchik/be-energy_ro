@@ -156,6 +156,8 @@ const translations = {
 
     // Common
     "common.back": "Volver",
+    "common.copyAddress": "Copiar dirección",
+    "common.copied": "Copiado",
   },
   en: {
     // Landing Page
@@ -300,6 +302,8 @@ const translations = {
 
     // Common
     "common.back": "Back",
+    "common.copyAddress": "Copy Address",
+    "common.copied": "Copied",
   },
 }
 

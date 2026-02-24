@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { useWallet } from "@/lib/wallet-context"
 import { useI18n } from "@/lib/i18n-context"
@@ -8,10 +8,12 @@ import { Sidebar } from "@/components/sidebar"
 import { DashboardHeader } from "@/components/dashboard-header"
 import { BalanceDisplay } from "@/components/balance-display"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { CheckCircle, Send, Zap, User, Copy, Check, Shield } from "lucide-react"
+import { CheckCircle, Send, Zap, User, Copy, Check, Shield, RefreshCw } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, Legend } from "recharts"
 import { mockUser, mockConsumption, mockStock, mockTransactions, mockEnergyRanking, generateIdenticon } from "@/lib/mock-data"
 import { useEnergyToken } from "@/hooks/useEnergyToken"
+import { Spinner } from "@/components/ui/spinner"
+import { Button } from "@/components/ui/button"
 
 export default function DashboardPage() {
   const { isConnected, userProfile, address } = useWallet()
@@ -19,6 +21,25 @@ export default function DashboardPage() {
   const router = useRouter()
   const { getBalance, isLoading: isBalanceLoading, error: balanceError } = useEnergyToken()
   const [hdropBalance, setHdropBalance] = useState<number | null>(null)
+
+  const loadBalance = useCallback(async () => {
+    if (!address) return
+    try {
+      const value = await getBalance(address)
+      setHdropBalance(Number.parseFloat(value))
+    } catch (err) {
+      console.error("Error loading balance", err)
+      setHdropBalance(0)
+    }
+  }, [address, getBalance])
+
+  useEffect(() => {
+    if (isConnected && address) {
+      loadBalance()
+    } else {
+      setHdropBalance(null)
+    }
+  }, [isConnected, address, loadBalance])
 
   // DEBUG: verificar env vars
   console.log('CONTRACT ADDRESSES:', {
@@ -28,6 +49,7 @@ export default function DashboardPage() {
 
 
   const [copied, setCopied] = useState(false)
+  const shortAddress = address ? `${address.slice(0, 4)}...${address.slice(-4)}` : null
   const [userStockKwh, setUserStockKwh] = useState(mockUser.stockKwh)
   const [transactions, setTransactions] = useState(mockTransactions)
 
@@ -36,35 +58,6 @@ export default function DashboardPage() {
     { name: "Consumido", value: mockUser.consumptionThisMonth, color: "#0300AB" },
     { name: "Disponible", value: mockUser.generationThisMonth - mockUser.consumptionThisMonth, color: "#059669" },
   ]
-
-  useEffect(() => {
-    let cancelled = false
-
-    async function loadHdropBalance() {
-      if (!isConnected || !address) {
-        setHdropBalance(null)
-        return
-      }
-
-      try {
-        const balStr = await getBalance(address)
-        const balNum = Number.parseFloat(balStr)
-
-        if (!cancelled) {
-          setHdropBalance(Number.isFinite(balNum) ? balNum : 0)
-        }
-      } catch (err) {
-        console.error("Failed to load HDROP balance:", err)
-        if (!cancelled) setHdropBalance(0)
-      }
-    }
-
-    loadHdropBalance()
-
-    return () => {
-      cancelled = true
-    }
-  }, [isConnected, address, getBalance])
 
   useEffect(() => {
     if (!isConnected) {
@@ -99,13 +92,12 @@ export default function DashboardPage() {
   }
 
   const handleCopyAddress = async () => {
+    if (!address) return
     try {
-      await navigator.clipboard.writeText(address ?? mockUser.address)
+      await navigator.clipboard.writeText(address)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
-    } catch (err) {
-      console.error("Failed to copy:", err)
-    }
+    } catch (err) {console.error("Failed to copy:", err)}
   }
 
   if (!isConnected) {
@@ -142,17 +134,41 @@ export default function DashboardPage() {
                     <h2 className="text-2xl md:text-3xl font-bold text-foreground">
                       {t("dashboard.welcome")} {userProfile.name}!
                     </h2>
+                    {/* Estilo de dirección + tooltip: mantener estructura (tooltip abajo, group-hover, transiciones) */}
                     <div className="flex items-center gap-2">
-                      <p className="text-muted-foreground text-sm md:text-base">
-                        {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : mockUser.shortAddress}
-                      </p>
-                      <button
-                        onClick={handleCopyAddress}
-                        className="text-muted-foreground hover:text-primary transition-colors p-1 rounded hover:bg-primary/10"
-                        title={copied ? t("common.copied") : t("common.copyAddress")}
-                      >
-                        {copied ? <Check className="w-4 h-4 text-success" /> : <Copy className="w-4 h-4" />}
-                      </button>
+                      <p className="text-muted-foreground text-sm md:text-base">{shortAddress || "No conectado"}</p>
+                      <div className="relative flex items-center group">
+                        <button
+                          onClick={handleCopyAddress}
+                          disabled={!address}
+                          className={`
+                            ml-2 p-1.5 rounded-md transition-all duration-200 active:scale-95
+                            ${copied
+                              ? "bg-success/10 text-success"
+                              : "text-muted-foreground hover:text-primary hover:bg-primary/10"}
+                          `}
+                        >
+                          {copied ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                        </button>
+
+                        {/* Tooltip custom abajo */}
+                        {(copied || !copied) && (
+                          <span
+                            className={`
+                              absolute top-full mt-2 left-1/2 -translate-x-1/2
+                              text-xs px-2 py-1 rounded-md
+                              bg-card border border-border text-foreground
+                              shadow-md whitespace-nowrap
+                              transition-all duration-200
+                              ${copied
+                                ? "opacity-100"
+                                : "opacity-0 group-hover:opacity-100"}
+                            `}
+                          >
+                            {copied ? t("common.copied") : t("common.copyAddress")}
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -166,15 +182,29 @@ export default function DashboardPage() {
               <CardTitle className="text-xl md:text-2xl">{t("dashboard.balance")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <BalanceDisplay amount={hdropBalance ?? 0} symbol="HDROP" />
-              {isConnected && address && (
-                <div className="text-sm text-muted-foreground">
-                  {balanceError
-                    ? "No se pudo cargar el balance desde el contrato."
-                    : hdropBalance === null
-                      ? "Cargando balance..."
-                      : null}
+              {isBalanceLoading && (
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <Spinner className="size-5" />
+                  {t("common.loading")}…
                 </div>
+              )}
+              {!isBalanceLoading && balanceError && (
+                <div className="space-y-2">
+                  <p className="text-destructive text-sm">{balanceError}</p>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={loadBalance}
+                    disabled={isBalanceLoading}
+                    className="gap-2"
+                  >
+                    <RefreshCw className="size-4" />
+                    {t("common.retry")}
+                  </Button>
+                </div>
+              )}
+              {!isBalanceLoading && !balanceError && hdropBalance !== null && (
+                <BalanceDisplay amount={hdropBalance} symbol="HDROP" fiatValue={mockUser.balanceUSD} />
               )}
 
               {/* DeFindex Yield Section */}
