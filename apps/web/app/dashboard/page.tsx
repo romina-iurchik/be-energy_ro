@@ -11,18 +11,21 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { CheckCircle, Send, Zap, User, Copy, Check, Shield } from "lucide-react"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart, PieChart, Pie, Cell, Legend } from "recharts"
 import { mockUser, mockConsumption, mockStock, mockTransactions, mockEnergyRanking, generateIdenticon } from "@/lib/mock-data"
+import { useEnergyToken } from "@/hooks/useEnergyToken"
 
 export default function DashboardPage() {
-  const { isConnected, userProfile } = useWallet()
+  const { isConnected, userProfile, address } = useWallet()
   const { t } = useI18n()
   const router = useRouter()
-  
+  const { getBalance, isLoading: isBalanceLoading, error: balanceError } = useEnergyToken()
+  const [hdropBalance, setHdropBalance] = useState<number | null>(null)
+
   // DEBUG: verificar env vars
   console.log('CONTRACT ADDRESSES:', {
     token: process.env.NEXT_PUBLIC_ENERGY_TOKEN_CONTRACT,
     distribution: process.env.NEXT_PUBLIC_ENERGY_DISTRIBUTION_CONTRACT
   })
-  
+
 
   const [copied, setCopied] = useState(false)
   const [userStockKwh, setUserStockKwh] = useState(mockUser.stockKwh)
@@ -33,6 +36,35 @@ export default function DashboardPage() {
     { name: "Consumido", value: mockUser.consumptionThisMonth, color: "#0300AB" },
     { name: "Disponible", value: mockUser.generationThisMonth - mockUser.consumptionThisMonth, color: "#059669" },
   ]
+
+  useEffect(() => {
+    let cancelled = false
+
+    async function loadHdropBalance() {
+      if (!isConnected || !address) {
+        setHdropBalance(null)
+        return
+      }
+
+      try {
+        const balStr = await getBalance(address)
+        const balNum = Number.parseFloat(balStr)
+
+        if (!cancelled) {
+          setHdropBalance(Number.isFinite(balNum) ? balNum : 0)
+        }
+      } catch (err) {
+        console.error("Failed to load HDROP balance:", err)
+        if (!cancelled) setHdropBalance(0)
+      }
+    }
+
+    loadHdropBalance()
+
+    return () => {
+      cancelled = true
+    }
+  }, [isConnected, address, getBalance])
 
   useEffect(() => {
     if (!isConnected) {
@@ -68,7 +100,7 @@ export default function DashboardPage() {
 
   const handleCopyAddress = async () => {
     try {
-      await navigator.clipboard.writeText(mockUser.address)
+      await navigator.clipboard.writeText(address ?? mockUser.address)
       setCopied(true)
       setTimeout(() => setCopied(false), 2000)
     } catch (err) {
@@ -111,7 +143,9 @@ export default function DashboardPage() {
                       {t("dashboard.welcome")} {userProfile.name}!
                     </h2>
                     <div className="flex items-center gap-2">
-                      <p className="text-muted-foreground text-sm md:text-base">{mockUser.shortAddress}</p>
+                      <p className="text-muted-foreground text-sm md:text-base">
+                        {address ? `${address.slice(0, 6)}...${address.slice(-4)}` : mockUser.shortAddress}
+                      </p>
                       <button
                         onClick={handleCopyAddress}
                         className="text-muted-foreground hover:text-primary transition-colors p-1 rounded hover:bg-primary/10"
@@ -132,7 +166,16 @@ export default function DashboardPage() {
               <CardTitle className="text-xl md:text-2xl">{t("dashboard.balance")}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <BalanceDisplay amount={mockUser.balance} symbol="HDROP" fiatValue={mockUser.balanceUSD} />
+              <BalanceDisplay amount={hdropBalance ?? 0} symbol="HDROP" />
+              {isConnected && address && (
+                <div className="text-sm text-muted-foreground">
+                  {balanceError
+                    ? "No se pudo cargar el balance desde el contrato."
+                    : hdropBalance === null
+                      ? "Cargando balance..."
+                      : null}
+                </div>
+              )}
 
               {/* DeFindex Yield Section */}
               {mockUser.defindexEnabled && (
@@ -281,9 +324,8 @@ export default function DashboardPage() {
                   {mockEnergyRanking.map((user, index) => (
                     <div
                       key={user.id}
-                      className={`flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-primary/5 ${
-                        index < 3 ? "bg-gradient-to-r from-success/10 to-transparent border border-success/20" : ""
-                      }`}
+                      className={`flex items-center gap-3 p-3 rounded-lg transition-all hover:bg-primary/5 ${index < 3 ? "bg-gradient-to-r from-success/10 to-transparent border border-success/20" : ""
+                        }`}
                     >
                       {/* Posición */}
                       <div className="flex-shrink-0 w-8 h-8 flex items-center justify-center">

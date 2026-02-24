@@ -27,28 +27,39 @@ export function useEnergyToken() {
         throw new Error("Energy token contract not configured")
       }
 
-      const server = new StellarSdk.SorobanRpc.Server(STELLAR_CONFIG.RPC_URL)
+      // 
+      const server = new StellarSdk.rpc.Server(STELLAR_CONFIG.RPC_URL)
 
       // Build the contract call to get balance
       const contract = new StellarSdk.Contract(CONTRACTS.ENERGY_TOKEN)
-      const account = await server.getAccount(targetAddress)
+      let account
+      try {
+        account = await server.getAccount(targetAddress)
+      } catch (err) {
+        const msg = err instanceof Error ? err.message : String(err)
+
+
+        if (msg.toLowerCase().includes("account not found")) {
+          return "0.00"
+        }
+
+        throw err
+      }
 
       const transaction = new StellarSdk.TransactionBuilder(account, {
         fee: StellarSdk.BASE_FEE,
         networkPassphrase: NETWORK_PASSPHRASE,
       })
         .addOperation(
-          contract.call(
-            "balance",
-            StellarSdk.nativeToScVal(targetAddress, { type: "address" })
-          )
+          contract.call("balance", StellarSdk.nativeToScVal(targetAddress, { type: "address" }))
         )
         .setTimeout(30)
         .build()
 
       const simulatedResult = await server.simulateTransaction(transaction)
 
-      if (StellarSdk.SorobanRpc.Api.isSimulationSuccess(simulatedResult)) {
+
+      if (StellarSdk.rpc.Api.isSimulationSuccess(simulatedResult)) {
         const balance = StellarSdk.scValToNative(simulatedResult.result!.retval)
         // Convert from 7 decimals to readable format
         return (Number(balance) / 10000000).toFixed(2)
@@ -84,7 +95,8 @@ export function useEnergyToken() {
       // Convert amount to contract format (7 decimals)
       const amountInStroops = Math.floor(amount * 10000000)
 
-      const server = new StellarSdk.SorobanRpc.Server(STELLAR_CONFIG.RPC_URL)
+
+      const server = new StellarSdk.rpc.Server(STELLAR_CONFIG.RPC_URL)
       const contract = new StellarSdk.Contract(CONTRACTS.ENERGY_TOKEN)
       const account = await server.getAccount(address)
 
@@ -119,7 +131,7 @@ export function useEnergyToken() {
         let getResponse = await server.getTransaction(result.hash)
 
         while (getResponse.status === "NOT_FOUND") {
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise((resolve) => setTimeout(resolve, 1000))
           getResponse = await server.getTransaction(result.hash)
         }
 
@@ -157,7 +169,8 @@ export function useEnergyToken() {
 
       const amountInStroops = Math.floor(amount * 10000000)
 
-      const server = new StellarSdk.SorobanRpc.Server(STELLAR_CONFIG.RPC_URL)
+
+      const server = new StellarSdk.rpc.Server(STELLAR_CONFIG.RPC_URL)
       const contract = new StellarSdk.Contract(CONTRACTS.ENERGY_TOKEN)
       const account = await server.getAccount(address)
 
@@ -188,7 +201,7 @@ export function useEnergyToken() {
         let getResponse = await server.getTransaction(result.hash)
 
         while (getResponse.status === "NOT_FOUND") {
-          await new Promise(resolve => setTimeout(resolve, 1000))
+          await new Promise((resolve) => setTimeout(resolve, 1000))
           getResponse = await server.getTransaction(result.hash)
         }
 
