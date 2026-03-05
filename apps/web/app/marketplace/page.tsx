@@ -142,13 +142,17 @@ export default function MarketplacePage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           seller_address: address || "unknown",
-          seller_short: address ? `${address.slice(0, 4)}...${address.slice(-4)}` : "unknown",
           amount_kwh: amount,
           price_per_kwh: price,
           total_xlm: xlmAmount,
         }),
       })
       const newOffer = await response.json()
+
+      if (!response.ok) {
+        console.error("Error creating offer:", newOffer.error)
+        return
+      }
 
       const mapped: Offer = {
         id: newOffer.id,
@@ -159,16 +163,15 @@ export default function MarketplacePage() {
         total: newOffer.total_xlm,
       }
 
-    setOffers([...offers, mapped])
-    setSuccessData({ type: "venta", amount, xlmAmount })
-    setShowCreateModal(false)
-    setShowSuccessModal(true)
-    setNewOfferAmount("")
-    setNewOfferPrice("")
-  } catch (err) {
-    console.error("Error creating offer:", err)
-  }
-
+      setOffers([...offers, mapped])
+      setSuccessData({ type: "venta", amount, xlmAmount })
+      setShowCreateModal(false)
+      setShowSuccessModal(true)
+      setNewOfferAmount("")
+      setNewOfferPrice("")
+    } catch (err) {
+      console.error("Error creating offer:", err)
+    }
   }
   const handleBuy = (offer: Offer) => {
     setSelectedOffer(offer)
@@ -180,9 +183,14 @@ export default function MarketplacePage() {
       try {
         const txHash = await transfer(selectedOffer.seller, selectedOffer.amount)
 
+        await fetch("/api/offers", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: selectedOffer.id, status: "sold", tx_hash: txHash }),
+        })
+
         const updatedOffers = offers.filter((offer) => offer.id !== selectedOffer.id)
         setOffers(updatedOffers)
-        localStorage.setItem("marketplaceOffers", JSON.stringify(updatedOffers))
 
         const newStock = userStockKwh + selectedOffer.amount
         setUserStockKwh(newStock)
