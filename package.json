@@ -7,13 +7,17 @@
     "dev": "turbo dev",
     "build": "turbo build",
     "lint": "turbo lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "simulate": "npx tsx scripts/simulate-testnet.ts"
   },
   "devDependencies": {
     "prettier": "^3.5.3",
     "turbo": "^2.5.4"
   },
   "dependencies": {
+    "@stellar/stellar-sdk": "^14.6.1",
+    "@supabase/supabase-js": "^2.98.0",
+    "dotenv": "^17.3.1",
     "next": "16.0.10",
     "react": "^19.2.4",
     "react-dom": "^19.2.4"
