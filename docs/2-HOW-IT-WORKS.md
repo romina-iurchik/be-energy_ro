@@ -1,6 +1,6 @@
-# 2. BeEnergy — Cómo funciona
+# 2. BeEnergy
 
-BeEnergy es un dashboard de gestión cooperativa + infraestructura de certificación energética on-chain. Ofrece a las cooperativas un panel para administrar su operación (miembros, medidores, lecturas, estadísticas) y tokeniza la producción de energía renovable como proto-certificados verificables en Stellar, vendibles a compradores externos.
+BeEnergy es un dashboard de gestión cooperativa + infraestructura de certificación de energía renovable on-chain. Ofrece a las cooperativas un panel para administrar su operación (miembros, medidores, lecturas, estadísticas) y tokeniza la producción de energía renovable como proto-certificados verificables en Stellar, vendibles a compradores externos.
 
 ## El problema
 
@@ -13,7 +13,7 @@ La generación distribuida crece en Argentina. Cooperativas y comunidades instal
 - Empresas con metas ESG no pueden acceder fácilmente a certificados de generación distribuida en Latinoamérica.
 - El atributo ambiental de la generación renovable (el "verde" de la energía) se pierde o no se monetiza.
 
-## Qué hace BeEnergy
+## ¿Qué hace BeEnergy?
 
 BeEnergy ofrece dos cosas a las cooperativas:
 
@@ -30,14 +30,20 @@ El token representa el **atributo ambiental** de la generación — no la electr
 | Sin trazabilidad para ESG | Historial completo e inmutable en Stellar |
 | Acceso limitado al mercado de RECs | Puerta de entrada al mercado de certificados |
 
-## Cómo funciona
+## ¿Cómo funciona?
 
 ### 1. La cooperativa genera energía
 
 La cooperativa o comunidad solar genera energía renovable. La producción se mide con medidores.
 
-- En Fase 1 (piloto): el medidor inteligente envía las lecturas automáticamente vía API. Se incluye un smart meter mock que simula datos realistas.
-- En Fase 2: integración directa con medidores de la cooperativa (HES/MDM) e inversores solares (Fronius, Huawei, SMA).
+**En Fase 1 (piloto):**
+- Datos reales: Cooperativa exporta lecturas de sus medidores (CSV o API si disponible)
+- Testing/demos: Smart meter mock incluido que simula curva solar realista
+- Carga manual o automática según infraestructura de la cooperativa
+**En Fase 2:**
+- Integración directa con sistemas de medición (HES/MDM)
+- Integración con inversores solares (Fronius, Huawei, SMA)
+- Ingesta automática continua
 
 ### 2. Se emiten los proto-certificados
 
@@ -60,23 +66,27 @@ El comprador retira el certificado (burn on-chain). Esto evita doble conteo: una
 
 Los ingresos de la venta vuelven a la cooperativa y benefician a sus miembros.
 
-## Qué es un proto-certificado
+## ¿Qué es un proto-certificado?
 
 Un proto-certificado es un **claim verificable on-chain de que 1 kWh de energía renovable fue generado**. Es la base sobre la cual se construye una certificación completa.
 
-**Qué es:**
+**¿Qué es hoy?**
 - Registro inmutable de generación renovable
 - Verificable por cualquier tercero en Stellar
 - Vendible como atributo ambiental
 
-**Qué NO es (todavía):**
+**¿Qué NO es (todavía)?**
 - No es un REC formal (le falta metadata estandarizada, verificación independiente, integración con registro reconocido)
 - No es energía física para consumir
 - No es un instrumento financiero ni especulativo
 
-Para convertirse en un REC completo necesita: metadata por mint (fecha, fuente, ubicación, tecnología), verificación independiente y aceptación por un estándar reconocido (I-REC, Energy Web, TIGR).
+**Camino a REC completo:**
+Para convertirse en un REC formalmente reconocido necesita:
+1. Metadata estandarizada por mint (fecha, ubicación, fuente, tecnología)
+2. Verificación independiente (auditor externo)
+3. Integración con registro reconocido (I-REC, Energy Web, TIGR)
 
-## Quiénes participan
+## ¿Quiénes participan?
 
 ### Cooperativa (nuestro cliente)
 La cooperativa genera energía renovable y usa BeEnergy para certificar esa producción. Administra el sistema, valida datos, gestiona miembros.
@@ -90,37 +100,56 @@ Los miembros son participantes de la cooperativa energética. Según cada cooper
 No se asume un modelo único — el sistema es flexible.
 
 ### Compradores externos
-- Empresas con metas ESG (Google, Microsoft, corporaciones con compromisos climáticos)
-- Fondos climáticos
-- Programas de compensación de carbono
+- Empresas multinacionales con compromisos ESG verificables
+- Fondos de inversión climática
+- Programas gubernamentales de compensación de carbono
 - Mercados de certificados renovables
 
-## Por qué blockchain
+## ¿Por qué blockchain?
 
 El registro de certificados se implementa sobre Stellar:
 
+| Web2 (base de datos tradicional) | BeEnergy (Stellar blockchain) |
+|---|---|
+| Registro puede alterarse | Inmutable (nadie puede cambiar historial) |
+| Solo BeEnergy puede auditar | Auditable públicamente por cualquiera |
+| Requiere confiar en empresa | Verificable sin confianza (trustless) |
+| Si BeEnergy cierra, datos se pierden | Historial persiste on-chain independientemente |
+| Fees de intermediarios | Fees ~$0.00001 XLM por tx |
+| Proceso lento (días/semanas) | Settlement instantáneo (5 segundos) |
+
+**Ventajas técnicas Stellar:**
 - **Trazabilidad**: cada mint, transferencia y retiro es verificable on-chain.
 - **Inmutabilidad**: el historial no puede alterarse.
 - **Transparencia**: cualquier tercero puede auditar sin depender de BeEnergy.
 - **Fees bajos**: ~0.00001 XLM por transacción en Stellar.
 - **Interoperabilidad**: token SEP-41, estándar de Stellar, compatible con el ecosistema.
+- **Finalidad rápida**: 5 segundos por transacción
 
 La blockchain es infraestructura invisible para el usuario final. Solo está para que todo sea verificable y auditable.
 
-## Niveles del producto
+## Niveles del producto (evolución a REC completo)
 
 ### Nivel 1 — Registro interno (actual)
-Token = registro de producción renovable para cooperativas. Proto-certificado con trazabilidad on-chain.
+**¿Qué es?**
+- Token = registro de producción renovable para cooperativas.
+- Proto-certificado con trazabilidad on-chain.
 
 ### Nivel 2 — Certificación verificable
-Se agregan: medidores inteligentes, oráculos, verificación independiente. El token gana credibilidad externa y metadata estandarizada.
+**¿Qué se agrega?**
+- Medidores inteligentes con ingesta automática
+- Oráculos para validación externa
+- Metadata estandarizada (fecha, ubicación, tecnología)
 
 ### Nivel 3 — Estándar reconocido
-Integración con I-REC, Energy Web, TIGR. Acceso al mercado global de RECs. El token se acepta internacionalmente como certificado renovable.
+**Qué se agrega:**
+- Integración con I-REC, Energy Web, TIGR.
+- Acceso al mercado global de RECs.
+- El token se acepta internacionalmente como certificado renovable.
 
 ## Modelo de negocio
 
-Dos fuentes de ingresos:
+BeEnergy genera ingresos de dos fuentes:
 
 1. **Suscripción SaaS** — por el dashboard de gestión cooperativa (planes Starter, Pro, Enterprise).
 2. **Comisión sobre venta de certificados** — porcentaje sobre cada proto-certificado vendido a compradores externos.
