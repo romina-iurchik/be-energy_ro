@@ -10,6 +10,8 @@
 
 BeEnergy is a cooperative management dashboard + on-chain certification infrastructure for renewable energy on Stellar. Cooperatives use the dashboard to manage members, meters, readings, and statistics — and BeEnergy tokenizes their production as proto-certificates sold to external buyers (companies, ESG funds, climate programs).
 
+[Video](https://www.youtube.com/watch?v=c5avxNUI18Y)
+
 ---
 
 ## What it does
