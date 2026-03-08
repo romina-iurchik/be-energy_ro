@@ -6,7 +6,7 @@
 
 ## El producto en una oración
 
-**BeEnergy es un dashboard de gestión cooperativa + infraestructura de certificación on-chain. Ofrece a las cooperativas un panel para administrar su operación y tokeniza la producción renovable como proto-certificados verificables en Stellar, vendibles a compradores externos.**
+**BeEnergy es un dashboard de gestión cooperativa + infraestructura de certificación on-chain que tokeniza energía renovable como proto-certificados verificables en Stellar, eliminando intermediarios centralizados y reduciendo costos de certificación.**
 
 ---
 
@@ -27,8 +27,9 @@
 │                                                                     │
 │   📊  MEDIDOR registra kWh generados                                │
 │                                                                     │
-│   El medidor inteligente envía lecturas automáticamente vía API     │
-│   (POST /api/meters/readings — bulk cada 15 min)                   │
+│   El medidor inteligente envía lecturas automáticamente vía API:    │
+│   - POST /api/meters/readings — bulk cada 15 min (automático)       │
+│   - POST /api/readings — lectura individual (manual)                │
 │                                                                     │
 └──────────────────────────┬──────────────────────────────────────────┘
                            │
@@ -48,8 +49,9 @@
                            ▼
 ┌─────────────────────────────────────────────────────────────────────┐
 │                                                                     │
-│   🪙  SE MINTEA EL PROTO-CERTIFICADO on-chain                       │
+│   🪙  SE MINTEA EL PROTO-CERTIFICADO on-chain                        │
 │                                                                     │
+│    API: POST /api/certificates → valida + mintea on-chain           │                        │                                                                     │
 │   1 token = 1 kWh de generación renovable verificada                │
 │   El token es SEP-41 (estándar Stellar)                             │
 │   Cada cooperativa tiene su propio token con nombre propio          │
@@ -78,6 +80,7 @@
 │                                                                     │
 │   🔥  SE RETIRA EL CERTIFICADO → se quema el token                  │
 │                                                                     │
+│   API: POST /api/certificates/retire → quema tokens on-chain        │                         │                                                                     │
 │   El comprador retira (retire) el certificado.                      │
 │   Los tokens retirados se queman (burn). No se reusan.              │
 │   Esto evita doble conteo del atributo ambiental.                   │
@@ -85,27 +88,37 @@
 │   Contrato: energy_token.burn_energy(comprador, cantidad)           │
 │                                                                     │
 │   Todo queda registrado en blockchain = auditable por terceros.     │
-│                                                                     │
+│   TX hash público en Stellar Explorer.                              │                         │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## Quién es quién
+## ¿Quién es quién?
 
 ```
 ┌──────────────────────┐     ┌──────────────────────┐
+│  COOPERATIVA         │     │  MIEMBROS            │
+│  (nuestro cliente)   │────▶│  (participantes)     │
 │                      │     │                      │
-│   COOPERATIVA        │     │   COMPRADOR EXTERNO  │
-│   (nuestro cliente)  │     │   (empresa ESG,      │
-│                      │     │    fondo climático)   │
-│   • Genera energía   │     │                      │
-│   • Carga lecturas   │     │   • Compra certif.   │
-│   • Valida datos     │     │   • Retira (burn)    │
-│   • Ve analytics     │     │   • Declara consumo  │
-│   • Gestiona miembros│     │     como renovable   │
-│                      │     │                      │
+│  • Genera energía    │     │  • Generan energía   │
+│  • Carga lecturas    │     │    (si son prosumers)│
+│  • Valida datos      │     │  • Reciben tokens    │
+│  • Ve analytics      │     │    proporcionales    │
+│  • Gestiona miembros │     │  • Ven su generación │
+│  • Vende certif.     │     │  • Dashboard propio  │
 └──────────┬───────────┘     └──────────────────────┘
+           │
+           │                 ┌──────────────────────┐
+           │                 │  COMPRADOR EXTERNO   │
+           └────────────────▶│  (empresa ESG,       │
+                             │   fondo climático)   │
+                             │                      │
+                             │  • Compra certif.    │
+                             │  • Retira (burn)     │
+                             │  • Declara consumo   │
+                             │    como renovable    │
+                             └──────────────────────┘
            │
            │  usa
            ▼
@@ -146,7 +159,7 @@
 ## Ciclo de vida del token
 
 ```
-MINT                          SALE                         RETIRE
+MINT                          TRANSFER                      RETIRE
   │                             │                             │
   ▼                             ▼                             ▼
 Cooperativa genera         Comprador externo           Comprador retira
@@ -169,3 +182,21 @@ participación              al comprador                reusar (evita
 6. **Miembros = participantes de la cooperativa.** Tres modelos posibles (prosumers, copropietarios, mixto).
 7. **Blockchain es invisible.** Está para trazabilidad y auditoría, no para que nadie la vea.
 8. **Proto-certificado ≠ REC formal.** Para ser REC necesita metadata, verificación independiente, estándar reconocido.
+9. **Cooperativa valida SIEMPRE.** Sin validación de la cooperativa, no hay mint. La cooperativa es la autoridad sobre sus datos.
+
+---
+## Estados del certificado
+
+Un certificado pasa por estos estados:
+```
+GENERADO          VALIDADO           MINTEADO          TRANSFERIDO        RETIRADO
+   │                 │                  │                   │                │
+   ▼                 ▼                  ▼                   ▼                ▼
+Medidor          Cooperativa        Blockchain         Comprador       Certificado
+registra  →      valida     →      emite token  →     adquiere   →    quemado
+kWh              lectura            on-chain           (paga)          (burn)
+
+Estado DB:       is_validated:      tx_hash:          transferred_    retired_at:
+pending          true               0x7a8b...         to: 0xABC...    timestamp
+```
+
