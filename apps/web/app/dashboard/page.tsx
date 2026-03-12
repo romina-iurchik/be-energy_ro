@@ -476,10 +476,12 @@ export default function DashboardPage() {
                 )}
                 {recentPayments.length > 0 && (
                   <div className="space-y-3">
-                    {recentPayments.filter((p) => p.amount || p.source_amount).map((payment) => {
-                      const isIncoming = payment.to === address
-                      const amount = payment.amount || payment.source_amount || "0"
-                      const asset = payment.asset_code || (payment.asset_type === "native" ? "XLM" : payment.source_asset_code || "XLM")
+                    {recentPayments.filter((p) => p.amount || p.source_amount || p.starting_balance).map((payment) => {
+                      const isIncoming = payment.type === "create_account"
+                        ? payment.account === address
+                        : payment.to === address
+                      const amount = payment.amount || payment.source_amount || payment.starting_balance || "0"
+                      const asset = payment.asset_code || (payment.asset_type === "native" || payment.type === "create_account" ? "XLM" : payment.source_asset_code || "XLM")
 
                       return (
                         <div key={payment.id} className="flex items-center gap-3 p-3 rounded-lg hover:bg-muted transition-colors">
