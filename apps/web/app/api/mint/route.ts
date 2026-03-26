@@ -157,6 +157,14 @@ export async function POST(req: NextRequest) {
         tx_hash: txHash,
       })
 
+      await supabase.from("events").insert({
+        type: "mint",
+        amount: cert.total_kwh,
+        tx_hash: txHash,
+        cooperative_id: cert.cooperative_id,
+        stellar_address: mintTo,
+      })
+
       return NextResponse.json({
         success: true,
         tx_hash: txHash,
@@ -199,6 +207,14 @@ export async function POST(req: NextRequest) {
       prosumer_address: prosumerAddress,
       amount_hdrop: kwhAmount,
       tx_hash: txHash,
+    })
+
+    await supabase.from("events").insert({
+      type: "mint",
+      amount: kwhAmount,
+      tx_hash: txHash,
+      cooperative_id: reading.cooperative_id,
+      stellar_address: prosumerAddress,
     })
 
     return NextResponse.json({
